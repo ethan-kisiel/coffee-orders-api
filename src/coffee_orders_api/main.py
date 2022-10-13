@@ -5,6 +5,7 @@ app = Flask(__name__)
 api = Api(app)
 
 # Fake orders
+'''
 orders = [{"id":1,
            "name": "John Doe",
            "coffeeName":"Hot Coffee",
@@ -15,7 +16,8 @@ orders = [{"id":1,
            "coffeeName":"Iced Coffee",
            "total": 2.50,
            "coffeeSize": "Small"}]
-
+'''
+orders = []
 #request parser
 order_post_args = reqparse.RequestParser()
 order_post_args.add_argument("id", type=int, help="Entity of ID")
@@ -24,7 +26,16 @@ order_post_args.add_argument("coffeeName", type=str, help="Name of drink type")
 order_post_args.add_argument("total", type=float, help="Price of drink")
 order_post_args.add_argument("coffeeSize", type=str, help="Size of drink")
 
+def wipe_orders():
+    # recursivly remove all orders
+    if len(orders) < 1:
+        return
+    orders.pop()
+    wipe_orders()
+
 def abort_if_order_existnt(order_id: int):
+    # binary search thru orders call abort and return 404 code
+    # if not found
     beginning = 0
     end = len(orders) - 1
 
@@ -48,7 +59,11 @@ class Order(Resource):
 class PlaceOrder(Resource):
     def post(self):
        args = order_post_args.parse_args()
-       order_id = orders[len(orders)-1]['id'] + 1
+       if len(orders) < 1:
+           order_id = 1
+       else:
+           order_id = orders[len(orders)-1]['id'] + 1
+
        args['id'] = order_id
        orders.append(args)
        return abort_if_order_existnt(order_id)
@@ -57,9 +72,15 @@ class AllOrders(Resource):
     def get(self):
         return orders
 
+class ClearOrders(Resource):
+    def get(self):
+        wipe_orders()
+        return orders
+
 api.add_resource(Order, "/orders/<order_id>")
 api.add_resource(AllOrders, "/orders")
 api.add_resource(PlaceOrder, "/place-order")
+api.add_resource(ClearOrders, "/clear-orders")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
