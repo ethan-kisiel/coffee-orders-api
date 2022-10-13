@@ -2,4 +2,5 @@
 !/.gitignore
 venv/
 src/__pycache__/
+src/coffee_orders_api/__pycache__/
 tests/__pycache__/
