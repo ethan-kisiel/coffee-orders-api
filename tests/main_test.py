@@ -59,6 +59,15 @@ def test_add_order():
 
 def test_update_order():
     return
-def test_delete_order():
-    return
 
+def test_delete_order():
+    clear_response = clear_orders()
+    order = FAKE_ORDERS[0]
+    response = place_order(order)
+    assert(response.status_code == 200)
+
+    order_id = response.json()["id"]
+    response = requests.delete(BASE + f"/orders/{order_id}")
+    assert(response.status_code == 200)
+    order = response.json()
+    assert(order["id"] == order_id)

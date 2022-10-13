@@ -33,7 +33,7 @@ def wipe_orders():
     orders.pop()
     wipe_orders()
 
-def abort_if_order_existnt(order_id: int):
+def get_abort_if_order_existnt(order_id: int):
     # binary search thru orders call abort and return 404 code
     # if not found
     beginning = 0
@@ -51,10 +51,33 @@ def abort_if_order_existnt(order_id: int):
     abort(404, message=(f"Order with id {order_id} doesn't exist."))
 
 
+def pop_abort_if_order_existnt(order_id: int):
+    # binary search thru orders call abort and return 404 code
+    # if not found
+    beginning = 0
+    end = len(orders) - 1
+
+    while beginning <= end:
+        mid = (beginning + end) // 2
+        print(f"LOC:{mid}, B:{beginning}, E:{end}")
+        if orders[mid]['id'] == order_id:
+            order = orders.pop(mid)
+            return order
+        elif orders[mid]['id'] < order_id:
+            beginning = mid+1
+        elif orders[mid]['id'] > order_id:
+            end = mid-1
+    abort(404, message=(f"Order with id {order_id} doesn't exist."))
+
 class Order(Resource):
     def get(self, order_id):
         o_id = int(order_id)
-        return abort_if_order_existnt(o_id)
+        return get_abort_if_order_existnt(o_id)
+
+    def delete(self, order_id):
+        o_id = int(order_id)
+        order = get_abort_if_order_existnt(o_id)
+        return pop_abort_if_order_existnt(o_id)
 
 class PlaceOrder(Resource):
     def post(self):
@@ -66,7 +89,7 @@ class PlaceOrder(Resource):
 
        args['id'] = order_id
        orders.append(args)
-       return abort_if_order_existnt(order_id)
+       return get_abort_if_order_existnt(order_id)
 
 class AllOrders(Resource):
     def get(self):
