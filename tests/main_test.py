@@ -58,7 +58,20 @@ def test_add_order():
     assert(response.json()['name'] == "Ethan Kisiel")
 
 def test_update_order():
-    return
+    clear_response = clear_orders()
+    order = FAKE_ORDERS[0]
+    response = place_order(order)
+    order_id = response.json()['id']
+    assert(response.status_code == 200 and response.json()['name'] == "Ethan Kisiel")
+
+    order_to_put = FAKE_ORDERS[1]
+    response = requests.put(BASE + f"/orders/{order_id}", order_to_put)
+    assert(response.status_code == 200)
+
+    response = requests.get(BASE + f"/orders/{order_id}")
+    assert(response.status_code == 200 and response.json()['name'] == "John Doe")
+
+
 
 def test_delete_order():
     clear_response = clear_orders()
