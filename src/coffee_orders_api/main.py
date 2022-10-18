@@ -19,12 +19,13 @@ orders = [{"id":1,
 '''
 orders = []
 #request parser
-order_post_args = reqparse.RequestParser()
-order_post_args.add_argument("id", type=int, help="Entity of ID")
-order_post_args.add_argument("name", type=str, help="Name of customer")
-order_post_args.add_argument("coffeeName", type=str, help="Name of drink type")
-order_post_args.add_argument("total", type=float, help="Price of drink")
-order_post_args.add_argument("coffeeSize", type=str, help="Size of drink")
+order_args = reqparse.RequestParser()
+order_args.add_argument("id", type=int, help="Entity of ID")
+order_args.add_argument("name", type=str, help="Name of customer")
+order_args.add_argument("coffeeName", type=str, help="Name of drink type")
+order_args.add_argument("total", type=float, help="Price of drink")
+order_args.add_argument("coffeeSize", type=str, help="Size of drink")
+
 
 def wipe_orders():
     # recursivly remove all orders
@@ -50,6 +51,22 @@ def get_abort_if_order_existnt(order_id: int):
             end = mid-1
     abort(404, message=(f"Order with id {order_id} doesn't exist."))
 
+def get_index_abort_if_order_existnt(order_id: int):
+    # binary search thru orders call abort and return 404 code
+    # if not found
+    beginning = 0
+    end = len(orders) - 1
+
+    while beginning <= end:
+        mid = (beginning + end) // 2
+        print(f"LOC:{mid}, B:{beginning}, E:{end}")
+        if orders[mid]['id'] == order_id:
+            return mid
+        elif orders[mid]['id'] < order_id:
+            beginning = mid+1
+        elif orders[mid]['id'] > order_id:
+            end = mid-1
+    abort(404, message=(f"Order with id {order_id} doesn't exist."))
 
 def pop_abort_if_order_existnt(order_id: int):
     # binary search thru orders call abort and return 404 code
@@ -74,6 +91,16 @@ class Order(Resource):
         o_id = int(order_id)
         return get_abort_if_order_existnt(o_id)
 
+    def put(self, order_id):
+        print(order_id)
+        o_id = int(order_id)
+        args = order_args.parse_args()
+        args["id"] = o_id
+        print(args["id"])
+        order_index = get_index_abort_if_order_existnt(o_id)
+        orders[order_index] = args
+        return get_abort_if_order_existnt(o_id)
+
     def delete(self, order_id):
         o_id = int(order_id)
         order = get_abort_if_order_existnt(o_id)
@@ -81,7 +108,7 @@ class Order(Resource):
 
 class PlaceOrder(Resource):
     def post(self):
-       args = order_post_args.parse_args()
+       args = order_args.parse_args()
        if len(orders) < 1:
            order_id = 1
        else:
